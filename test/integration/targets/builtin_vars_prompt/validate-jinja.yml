@@ -4,14 +4,14 @@
   vars:
     allowed_environments: [dev, staging, prod]
   vars_prompt:
-    - name: environment
+    - name: target_env
       prompt: Enter environment
       private: false
-      validate: environment in allowed_environments
+      validate: target_env in allowed_environments
     - name: confirmation
       prompt: Confirm environment
       private: false
-      validate: confirmation == environment
+      validate: confirmation == target_env
     - name: url
       prompt: Enter URL
       private: false
@@ -23,7 +23,7 @@
   tasks:
     - ansible.builtin.assert:
         that:
-          - environment == 'prod'
-          - confirmation == environment
+          - target_env == 'prod'
+          - confirmation == target_env
           - url == 'https://example.org'
           - code == 'abc'

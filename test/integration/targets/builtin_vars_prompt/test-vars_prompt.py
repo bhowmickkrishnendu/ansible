@@ -35,15 +35,17 @@ def run_test(playbook, test_spec, args=None, timeout=10, env=None, forbidden_val
 
     transcript = io.BytesIO()
     vars_prompt_test.logfile_read = transcript
-    for item in test_spec[0]:
-        vars_prompt_test.expect(item[0])
-        if item[1]:
-            vars_prompt_test.send(item[1])
-    vars_prompt_test.expect(test_spec[1])
-    vars_prompt_test.expect(pexpect.EOF)
-    vars_prompt_test.close()
-    output = transcript.getvalue()
-    sys.stdout.buffer.write(output)
+    try:
+        for item in test_spec[0]:
+            vars_prompt_test.expect(item[0])
+            if item[1]:
+                vars_prompt_test.send(item[1])
+        vars_prompt_test.expect(test_spec[1])
+        vars_prompt_test.expect(pexpect.EOF)
+    finally:
+        vars_prompt_test.close()
+        output = transcript.getvalue()
+        sys.stdout.buffer.write(output)
     assert vars_prompt_test.exitstatus == expected_status
     for value in forbidden_values:
         assert value.encode() not in output

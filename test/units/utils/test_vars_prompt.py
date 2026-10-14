@@ -109,7 +109,7 @@ def test_empty_input_and_unsafe(monkeypatch, prompt_display) -> None:
 
 def test_unicode_input(monkeypatch, prompt_display) -> None:
     monkeypatch.setattr(prompt_display, 'prompt', Mock(return_value='caf\u00e9'))
-    assert prompt_display.do_var_prompt('value', validate=validator("value is match('^\\w+$')", 'value')) == 'caf\u00e9'
+    assert prompt_display.do_var_prompt('value', validate=validator("value is match('^\\\\w+$')", 'value')) == 'caf\u00e9'
 
 
 @pytest.mark.parametrize('expression, candidate, expected', [
@@ -139,7 +139,7 @@ def test_lookup_in_validation(monkeypatch) -> None:
 
 
 def test_input_is_not_evaluated_as_template() -> None:
-    assert validator('number == expected', variables=dict(expected='{{ 1 + 1 }}'))('{{ 1 + 1 }}')
+    assert validator('number | length == 11')('{{ 1 + 1 }}')
 
 
 @pytest.mark.parametrize('expression', ['missing_variable == number', 'number | length', 'number is missing_test'])

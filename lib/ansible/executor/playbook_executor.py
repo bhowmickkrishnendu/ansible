@@ -147,8 +147,10 @@ class PlaybookExecutor:
                             salt_size = var.get("salt_size", None)
                             salt = var.get("salt", None)
                             unsafe = boolean(var.get("unsafe", False))
-                            validation_engine = templar.extend(variables=self._variable_manager.get_vars(play=play))
-                            validator = build_prompt_validator(var.get("validate"), vname, validation_engine)
+                            validator = None
+                            if var.get("validate") is not None:
+                                validation_engine = templar.extend(variables=self._variable_manager.get_vars(play=play))
+                                validator = build_prompt_validator(var["validate"], vname, validation_engine)
 
                             if vname not in self._variable_manager.extra_vars:
                                 if self._tqm:
