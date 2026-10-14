@@ -7,8 +7,9 @@ import typing as t
 from collections import ChainMap
 
 from ansible.errors import AnsibleError
-from ansible._internal._templating._engine import TemplateEngine
-from ansible._internal._templating._utils import LazyOptions
+from ansible._internal._templating._engine import TemplateEngine, TemplateOptions
+from ansible._internal._templating._lazy_containers import _AnsibleLazyTemplateMixin
+from ansible._internal._templating._utils import LazyOptions, TemplateContext
 
 
 def build_prompt_validator(expression: object, varname: str, templar: TemplateEngine) -> t.Callable[[str], bool] | None:
@@ -26,7 +27,8 @@ def build_prompt_validator(expression: object, varname: str, templar: TemplateEn
 
     def validate(value: str) -> bool:
         # Input is data, not a trusted template, even when the final prompt value allows templating.
-        candidate_vars = templar.template({varname: value}, lazy_options=LazyOptions.SKIP_TEMPLATES)
+        with TemplateContext(template_value=expression, templar=templar, options=TemplateOptions.DEFAULT):
+            candidate_vars = _AnsibleLazyTemplateMixin._try_create({varname: value}, LazyOptions.SKIP_TEMPLATES)
         candidate_templar = templar.extend(variables=ChainMap(candidate_vars, templar.available_variables))
         try:
             return candidate_templar.evaluate_conditional(expression)
