@@ -6,6 +6,10 @@ permissions:
   contents: read
 jobs:
   prompt-validation:
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.13', '3.14', '3.15']
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -14,22 +18,22 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.14'
+          python-version: ${{ matrix.python }}
       - name: Install Ansible
         run: python -m pip install -e .
       - name: Sanity checks for all changed files
         run: |
           mapfile -t changed < <(git diff --name-only 0d66197543ddbca1a7afa13da1df94bae70dd3ce..HEAD -- lib test changelogs)
-          bin/ansible-test sanity --venv --requirements --python 3.14 "${changed[@]}" -v
+          bin/ansible-test sanity --venv --requirements --python ${{ matrix.python }} "${changed[@]}" -v
       - name: Unit tests
         if: always()
         run: >-
-          bin/ansible-test units --venv --requirements --python 3.14 -v
+          bin/ansible-test units --venv --requirements --python ${{ matrix.python }} -v
           test/units/utils/test_vars_prompt.py test/units/utils/test_display.py
           test/units/utils/display/ test/units/playbook/test_play.py
       - name: Prompt integration tests
         if: always()
-        run: bin/ansible-test integration --venv --requirements --python 3.14 -v builtin_vars_prompt ansible-doc
+        run: bin/ansible-test integration --venv --requirements --python ${{ matrix.python }} -v builtin_vars_prompt ansible-doc
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v4

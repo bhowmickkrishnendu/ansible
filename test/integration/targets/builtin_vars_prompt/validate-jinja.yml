@@ -1,0 +1,29 @@
+- name: Test Jinja2 prompt validation
+  hosts: testhost
+  gather_facts: false
+  vars:
+    allowed_environments: [dev, staging, prod]
+  vars_prompt:
+    - name: environment
+      prompt: Enter environment
+      private: false
+      validate: environment in allowed_environments
+    - name: confirmation
+      prompt: Confirm environment
+      private: false
+      validate: confirmation == environment
+    - name: url
+      prompt: Enter URL
+      private: false
+      validate: url is match('^https://')
+    - name: code
+      prompt: Enter code
+      private: false
+      validate: code | length == 3
+  tasks:
+    - ansible.builtin.assert:
+        that:
+          - environment == 'prod'
+          - confirmation == environment
+          - url == 'https://example.org'
+          - code == 'abc'

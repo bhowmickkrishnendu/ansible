@@ -144,6 +144,23 @@ tests = [
           ('confirm Enter password:', '123\r')],
          'testhost.*ok=1']},
 
+    # Membership uses earlier prompt input and play variables without a regex.
+    {'playbook': 'validate-jinja.yml',
+     'test_spec': [
+         [('Enter environment:', 'unknown\r'),
+          ('Invalid input', ''),
+          ('Enter environment:', 'prod\r'),
+          ('Confirm environment:', 'staging\r'),
+          ('Invalid input', ''),
+          ('Confirm environment:', 'prod\r'),
+          ('Enter URL:', 'http://example.org\r'),
+          ('Invalid input', ''),
+          ('Enter URL:', 'https://example.org\r'),
+          ('Enter code:', 'long\r'),
+          ('Invalid input', ''),
+          ('Enter code:', 'abc\r')],
+         'All assertions passed']},
+
     # Test unsupported keys
     {'playbook': 'unsupported.yml',
      'expected_status': 4,
@@ -189,8 +206,7 @@ assert 'non-interactive mode' in output
 assert 'Invalid input' not in output
 
 
-# Configuration errors must be reported even during a syntax check.
-output = run_noninteractive(['--syntax-check', '-e', 'number_pattern=['], 1)
-assert 'Invalid regular expression in vars_prompt validate' in output
-output = run_noninteractive(['--syntax-check', '-e', '{"number_pattern": 42}'], 1)
-assert 'vars_prompt validate option must be a string' in output
+# Expressions refer to play variables; an invalid regex is an evaluation error at runtime.
+output = run_noninteractive(['-e', 'number_pattern=['], 1)
+assert 'non-interactive mode' not in output
+assert 'Error evaluating vars_prompt validation' in output
