@@ -139,7 +139,7 @@ def test_lookup_in_validation(monkeypatch) -> None:
 
 
 def test_input_is_not_evaluated_as_template() -> None:
-    assert validator("number == '{{ 1 + 1 }}'")('{{ 1 + 1 }}')
+    assert validator('number == expected', variables=dict(expected='{{ 1 + 1 }}'))('{{ 1 + 1 }}')
 
 
 @pytest.mark.parametrize('expression', ['missing_variable == number', 'number | length', 'number is missing_test'])
@@ -150,3 +150,9 @@ def test_evaluation_errors_stop_prompt(monkeypatch, prompt_display, expression: 
         prompt_display.do_var_prompt('number', validate=validator(expression))
     prompt.assert_called_once()
     prompt_display.display.assert_not_called()
+
+
+def test_untrusted_expression_is_not_promoted_to_template() -> None:
+    validate = build_prompt_validator("number == '123'", 'number', TemplateEngine())
+    with pytest.raises(AnsibleError, match='Error evaluating vars_prompt validation'):
+        validate('123')

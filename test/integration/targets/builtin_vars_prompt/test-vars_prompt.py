@@ -13,6 +13,7 @@ env_vars = {
     'ANSIBLE_ROLES_PATH': './roles',
     'ANSIBLE_NOCOLOR': 'True',
     'ANSIBLE_RETRY_FILES_ENABLED': 'False',
+    'ANSIBLE_PROMPT_TEST_VALUE': 'abc',
 }
 
 
@@ -173,12 +174,12 @@ for t in tests:
     run_test(**t)
 
 
-def run_noninteractive(args: list[str], expected_status: int) -> str:
+def run_noninteractive(args: list[str], expected_status: int, playbook: str = 'validate.yml') -> str:
     """Exercise skipped prompts and defaults without a terminal or an unbounded wait."""
     env = os.environ.copy()
     env.update(env_vars)
     result = subprocess.run(
-        ['ansible-playbook', 'validate.yml', *sys.argv[1:], *args],
+        ['ansible-playbook', playbook, *sys.argv[1:], *args],
         stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
         text=True, timeout=30, env=env, check=False,
     )
@@ -210,3 +211,9 @@ assert 'Invalid input' not in output
 output = run_noninteractive(['-e', 'number_pattern=['], 1)
 assert 'non-interactive mode' not in output
 assert 'Error evaluating vars_prompt validation' in output
+
+
+output = run_noninteractive(['--syntax-check'], 1, 'validate-invalid-expression.yml')
+assert 'Invalid Jinja2 expression in vars_prompt validate' in output
+output = run_noninteractive(['--syntax-check'], 1, 'validate-invalid-type.yml')
+assert 'vars_prompt validate option must be a non-empty Jinja2 expression string' in output

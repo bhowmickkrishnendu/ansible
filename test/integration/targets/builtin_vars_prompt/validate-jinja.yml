@@ -19,7 +19,7 @@
     - name: code
       prompt: Enter code
       private: false
-      validate: code | length == 3
+      validate: code | length == 3 and code == lookup('ansible.builtin.env', 'ANSIBLE_PROMPT_TEST_VALUE')
   tasks:
     - ansible.builtin.assert:
         that:
